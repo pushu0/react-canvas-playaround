@@ -1,4 +1,4 @@
-import styles from './Canvas.module.css';
+import styles from './BaseCanvas.module.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getPoseStream, PosePayload, useStream } from '../lib/stream';
