@@ -2,152 +2,112 @@ import styles from './BaseCanvas.module.css';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getPoseStream, PosePayload, useStream } from '../lib/stream';
+import dynamic from 'next/dynamic';
+import {
+    useImage,
+    getRatio,
+    getImageCenterPositionOnCanvas,
+    getImageDimensionsToFitOnCanvas,
+} from '../lib/canvas.utils';
+import { IPosition, IDimensions } from '../types';
+
+const BaseCanvas = dynamic(() => import('../components/BaseCanvas'), { ssr: false });
 
 const PIXEL_TO_METER_RATIO = 10;
 
 const Canvas = () => {
-    const [pose, setPose] = useState<PosePayload>({
-        x: 0,
-        y: 0,
-        angle: 0,
-    });
+    const [isReady, setIsReady] = useState(false);
+
+    // pose as ref to skip re-rendering the whole component when it's updated
+    const pose = useRef<IPosition>();
     useStream(getPoseStream, (payload) => {
-        setPose(payload);
+        pose.current = payload;
     });
+    
+    const ratio = useRef(1);
+    const imgPosition = useRef<IPosition>();
+    const imgDimensions = useRef<IDimensions>();
 
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const requestIdRef = useRef(0);
-
-    const map = useRef({
-        img: new Image(),
-        x: 0,
-        y: 0,
-        height: 0,
-        width: 0,
-    });
-    const ratio = useRef(0);
+    const {image, loadImage} = useImage('/images/map.png');
 
     // compute Robot position
-    const robotPosition = useMemo<IPosition>(() => {
-        const startingPointX = map.current.x + map.current.width;
-        const startingPointY = map.current.y + map.current.height;
+    const getRobotPosition = (img: HTMLImageElement, context: CanvasRenderingContext2D) => {
+        const ratio = getRatio(context.canvas, img);
+        const { x, y } = getImageCenterPositionOnCanvas(img, context.canvas, ratio);
+        const { width, height } = getImageDimensionsToFitOnCanvas(img, context.canvas, ratio);
 
-        const poseXWithRatio = (pose?.x ?? 0) * PIXEL_TO_METER_RATIO * ratio.current;
-        const poseYWithRatio = (pose?.y ?? 0) * PIXEL_TO_METER_RATIO * ratio.current;
+        const startingPointX = x + width;
+        const startingPointY = y + height;
+
+        const poseXWithRatio = (pose.current?.x ?? 0) * PIXEL_TO_METER_RATIO * ratio;
+        const poseYWithRatio = (pose.current?.y ?? 0) * PIXEL_TO_METER_RATIO * ratio;
+
         return {
             x: startingPointX - poseXWithRatio,
             y: startingPointY - poseYWithRatio,
         };
-    }, [pose, map.current, requestIdRef]);
-
-    const drawMap = (ctx: CanvasRenderingContext2D) => {
-        ctx?.drawImage(map.current.img, map.current.x, map.current.y, map.current.width, map.current.height);
     };
-    const drawRobot = (ctx: CanvasRenderingContext2D) => {
+
+    const drawRobot = (img: HTMLImageElement) => (ctx: CanvasRenderingContext2D) => {
+        const { x, y } = getRobotPosition(img, ctx);
+
         ctx.fillStyle = '#000000';
         ctx.beginPath();
 
         const random = Math.random() * 100;
-        ctx.arc(robotPosition.x, robotPosition.y, 20 * Math.sin(random * 0.05) ** 2, 0, 2 * Math.PI);
+        ctx.arc(x, y, 20 * Math.sin(random * 0.05) ** 2, 0, 2 * Math.PI);
         ctx.fill();
     };
 
-    const drawQueue: ((ctx: CanvasRenderingContext2D) => void)[] = [];
-    drawQueue.push(drawMap);
-    drawQueue.push(drawRobot);
+    const drawLayers = useRef<((ctx: CanvasRenderingContext2D) => void)[]>([]);
 
     const draw = (ctx: CanvasRenderingContext2D) => {
+        const canvas = ctx.canvas;
         ctx.save();
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        drawQueue.forEach((drawItem) => drawItem(ctx));
+        ctx.clearRect(0, 0, canvas.width, canvas.height);    
+        drawLayers.current.forEach((drawItem) => drawItem(ctx));
+    };
+
+    const drawMap = (img: HTMLImageElement) => (context: CanvasRenderingContext2D) => {
+        if (!image.current) {
+            console.error('image not loaded');
+            return
+        }
+        ratio.current = getRatio(context.canvas, image.current);
+        imgPosition.current = getImageCenterPositionOnCanvas(image.current, context.canvas, ratio.current);
+        imgDimensions.current = getImageDimensionsToFitOnCanvas(image.current, context.canvas, ratio.current);
+
+
+        context.drawImage(
+            img,
+            imgPosition.current?.x ?? 0,
+            imgPosition.current?.y ?? 0,
+            imgDimensions.current?.width ?? 0,
+            imgDimensions.current?.height ?? 0,
+        );
     };
 
     // on mounted
     useEffect(() => {
-        const canvas = canvasRef.current as HTMLCanvasElement;
+        loadImage((img) => {
+            setIsReady(true);
+            image.current = img;
 
-        // higher resolution canvas
-        canvas.height = document.documentElement.clientHeight * 2;
-        canvas.width = document.documentElement.clientWidth * 2;
-
-        loadImage('/images/map.png', (img) => {
-            // init ratio
-            ratio.current = getRatio(canvas, img);
-
-            const { x, y } = getImageCenterPositionOnCanvas(img, canvas, ratio.current);
-            const { height, width } = getImageDimensionsToFitOnCanvas(img, canvas, ratio.current);
-            // init image props
-            map.current = {
-                x: x,
-                y: y,
-                height: height,
-                width: width,
-                img: img,
-            };
+            drawLayers.current = [];
+            drawLayers.current.push(drawMap(img));
+            drawLayers.current.push(drawRobot(img));
         });
-    }, []);
+    }, []);    
 
-    useEffect(() => {
-        draw(canvasRef.current?.getContext('2d')!);
-    }, [pose]);
-
-    return (
+    return isReady ? (
         <>
-            <canvas className={styles.canvas} ref={canvasRef} />
+            <BaseCanvas draw={draw} />
+        </>
+    ) : (
+        <>
+            <div> assets not ready yet </div>
         </>
     );
 };
 
 export default Canvas;
-
-function loadImage(url: string, callback: (img: HTMLImageElement) => void) {
-    var img = new Image();
-
-    img.onload = function () {
-        callback(img);
-    };
-    img.src = url;
-}
-
-// calculate ratio
-const getRatio = (img1: { width: number; height: number }, img2: { width: number; height: number }): number => {
-    const hRatio = img1.width / img2.width;
-    const vRatio = img1.height / img2.height;
-    const ratio = Math.min(hRatio, vRatio);
-    return ratio;
-};
-
-interface IPosition {
-    x: number;
-    y: number;
-}
-
-interface IDimensions {
-    width: number;
-    height: number;
-}
-
-// calculate position / dimensions of image to be drawn on canvas
-const getImageCenterPositionOnCanvas = (img: HTMLImageElement, canvas: HTMLCanvasElement, ratio: number): IPosition => {
-    const x = (canvas.width - img.width * ratio) / 2;
-    const y = (canvas.height - img.height * ratio) / 2;
-
-    return {
-        x,
-        y,
-    };
-};
-
-const getImageDimensionsToFitOnCanvas = (
-    img: HTMLImageElement,
-    canvas: HTMLCanvasElement,
-    ratio: number,
-): IDimensions => {
-    const imageHeight = img.height * ratio;
-    const imageWidth = img.width * ratio;
-
-    return {
-        height: imageHeight,
-        width: imageWidth,
-    };
-};
