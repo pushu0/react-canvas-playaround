@@ -1,6 +1,8 @@
 import { useMemo, useRef } from 'react';
 import { IDimensions, IPosition } from '../types';
 
+export const CANVAS_SCALE = 2
+
 export const useImage = (url: string) => {
     const image = useRef<HTMLImageElement | null>(null);
     const isImageLoaded = useRef(false);
