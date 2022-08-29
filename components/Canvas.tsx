@@ -1,7 +1,7 @@
 import styles from './BaseCanvas.module.css';
 
 import { useEffect, useRef } from 'react';
-import { getPoseStream, PosePayload, useStream } from '../lib/stream';
+import { getPoseStream, IPosePayload, useStream } from '../lib/stream';
 import dynamic from 'next/dynamic';
 import { handleImgClick } from '../lib/utils';
 import { IPosition, Collection } from '../types';
@@ -12,7 +12,7 @@ const BaseCanvas = dynamic(() => import('../components/BaseCanvas'), { ssr: fals
 // expect an image to be drawn as a map
 const Canvas = (props: { assets: { map: HTMLImageElement } }) => {
     // pose as ref to skip re-rendering the whole component when it's updated
-    const pose = useRef<PosePayload>({
+    const pose = useRef<IPosePayload>({
         x: 0,
         y: 0,
         angle: 0,

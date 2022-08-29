@@ -3,33 +3,33 @@ import { useEffect, useRef, useState } from 'react';
 // How often the connection will check its status and attempt reconnection
 const CHECK_TIME = 1000; // milliseconds
 
-enum Endpoint {
+enum IEndpoint {
     pose = 'pose',
     paused = 'paused',
 }
 
-export interface PosePayload {
+export interface IPosePayload {
     x: number;
     y: number;
     angle: number;
 }
 
-export interface PausedPayload {
+export interface IPausedPayload {
     paused: boolean;
 }
 
-type IncomingPayload<E> = E extends Endpoint.pose ? PosePayload : E extends Endpoint.paused ? PausedPayload : never;
+type IncomingPayload<E> = E extends IEndpoint.pose ? IPosePayload : E extends IEndpoint.paused ? IPausedPayload : never;
 
-type OutgoingPayload<E> = E extends Endpoint.pose ? PosePayload : E extends Endpoint.paused ? PausedPayload : never;
+type OutgoingPayload<E> = E extends IEndpoint.pose ? IPosePayload : E extends IEndpoint.paused ? IPausedPayload : never;
 
 // Return the URL for a specified endpoint.
-const url = (endpoint: Endpoint) => {
+const url = (endpoint: IEndpoint) => {
     return `ws://${window.location.host}/api/${endpoint}`;
 };
 
 // The underlying Stream object takes an endpoint and returns an API stream
 // which will keep itself connected until explicitly closed.
-export class Stream<P extends IncomingPayload<Endpoint>, Q extends OutgoingPayload<Endpoint>> {
+export class Stream<P extends IncomingPayload<IEndpoint>, Q extends OutgoingPayload<IEndpoint>> {
     private url: string;
     private socket?: WebSocket;
     private checkTimer: number;
@@ -38,7 +38,7 @@ export class Stream<P extends IncomingPayload<Endpoint>, Q extends OutgoingPaylo
     private openCallbacks: (() => void)[] = [];
     private closeCallbacks: (() => void)[] = [];
 
-    constructor(endpoint: Endpoint) {
+    constructor(endpoint: IEndpoint) {
         this.url = url(endpoint);
         this.connect();
         this.checkTimer = window.setInterval(this.checkConnection, CHECK_TIME);
@@ -149,15 +149,15 @@ export class Stream<P extends IncomingPayload<Endpoint>, Q extends OutgoingPaylo
     };
 }
 
-const getStream = <E extends Endpoint>(endpoint: E): Stream<IncomingPayload<E>, OutgoingPayload<E>> => {
+const getStream = <E extends IEndpoint>(endpoint: E): Stream<IncomingPayload<E>, OutgoingPayload<E>> => {
     return new Stream(endpoint);
 };
 
 // Return a stream for the pose endpoint.
-export const getPoseStream = () => getStream(Endpoint.pose);
+export const getPoseStream = () => getStream(IEndpoint.pose);
 
 // Return a stream for the paused endpoint.
-export const getPausedStream = () => getStream(Endpoint.paused);
+export const getPausedStream = () => getStream(IEndpoint.paused);
 
 // useStream is a hook that can use a streaming API endpoint from above. It gets
 // a 'streamer' function that will return a stream when called, and it will then
@@ -165,7 +165,7 @@ export const getPausedStream = () => getStream(Endpoint.paused);
 // stream when finished. The underlying stream will be returned for
 // bidirectional communication, along with a flag indicating whether the stream
 // is currently connected.
-export const useStream = <P extends IncomingPayload<Endpoint>, Q extends OutgoingPayload<Endpoint>>(
+export const useStream = <P extends IncomingPayload<IEndpoint>, Q extends OutgoingPayload<IEndpoint>>(
     streamer: () => Stream<P, Q>,
     callback?: (payload: P) => void,
 ) => {

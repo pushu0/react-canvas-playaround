@@ -1,13 +1,13 @@
-import { MutableRefObject } from "react";
-import { CanvasImage, CanvasItem } from ".";
-import { PIXEL_TO_METER_RATIO } from "../../lib/utils";
-import { PosePayload } from "../../lib/stream";
+import { MutableRefObject } from 'react';
+import { CanvasImage, CanvasItem } from '.';
+import { PIXEL_TO_METER_RATIO } from '../../lib/utils';
+import { IPosePayload } from '../../lib/stream';
 
 export class CanvasRobot extends CanvasItem {
     img: CanvasImage;
-    pose: MutableRefObject<PosePayload>;
+    pose: MutableRefObject<IPosePayload>;
 
-    constructor(img: CanvasImage, pose: MutableRefObject<PosePayload>) {
+    constructor(img: CanvasImage, pose: MutableRefObject<IPosePayload>) {
         super();
         this.img = img;
         this.pose = pose;

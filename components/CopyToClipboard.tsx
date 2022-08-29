@@ -2,12 +2,12 @@ import styles from './CopyToClipboard.module.css';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCheck, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { PosePayload } from '../lib/stream';
+import { IPosePayload } from '../lib/stream';
 import { useState } from 'react';
 
 const CLEAR_ICON_TIMEOUT = 750;
 
-const copyToClipboard = (props: { position: PosePayload }) => {
+const copyToClipboard = (props: { position: IPosePayload }) => {
     const [icon, setIcon] = useState(faCopy);
 
     const clearIcon = () =>

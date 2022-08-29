@@ -1,11 +1,11 @@
 import { useRef, useCallback, useMemo } from 'react';
-import { PosePayload, useStream, getPoseStream, getPausedStream } from './stream';
+import { IPosePayload, useStream, getPoseStream, getPausedStream } from './stream';
 
 const INCREMENT_BY = 0.5;
 
 export const usePoseControls = () => {
     // Current pose
-    const pose = useRef<PosePayload>();
+    const pose = useRef<IPosePayload>();
 
     const { stream: poseStream } = useStream(getPoseStream, (payload) => {
         pose.current = payload;

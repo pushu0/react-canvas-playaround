@@ -1,7 +1,7 @@
 import styles from './RobotStatus.module.css';
 
 import { useMemo, useCallback, useState, useRef } from 'react';
-import { getPoseStream, useStream, PosePayload, getPausedStream } from '../lib/stream';
+import { getPoseStream, useStream, IPosePayload, getPausedStream } from '../lib/stream';
 import dynamic from 'next/dynamic';
 import { PIXEL_TO_METER_RATIO } from '../lib/utils';
 import { usePoseControls } from '../lib/poseControls';
