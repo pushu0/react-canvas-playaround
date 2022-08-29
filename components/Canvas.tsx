@@ -18,9 +18,14 @@ const PIXEL_TO_METER_RATIO = 10;
 
 const Canvas = () => {
     const [isReady, setIsReady] = useState(false);
+    const { stream: poseStream } = useStream(getPoseStream);
 
     // pose as ref to skip re-rendering the whole component when it's updated
-    const pose = useRef<IPosition>();
+    const pose = useRef<PosePayload>({
+        x: 0,
+        y: 0,
+        angle: 0,
+    });
     useStream(getPoseStream, (payload) => {
         pose.current = payload;
     });
@@ -32,11 +37,7 @@ const Canvas = () => {
     const { image, loadImage } = useImage('/images/map.png');
 
     // compute Robot position
-    const getPositionFromBottomRight = (
-        img: HTMLImageElement,
-        context: CanvasRenderingContext2D,
-        position: IPosition,
-    ) => {
+    const getPositionFromBottomRight = (img: HTMLImageElement, context: CanvasRenderingContext2D) => {
         const ratio = getRatio(context.canvas, img);
         const { x, y } = getImageCenterPositionOnCanvas(img, context.canvas, ratio);
         const { width, height } = getImageDimensionsToFitOnCanvas(img, context.canvas, ratio);
@@ -44,24 +45,29 @@ const Canvas = () => {
         const startingPointX = x + width;
         const startingPointY = y + height;
 
-        const posXWithRatio = (position.x ?? 0) * PIXEL_TO_METER_RATIO * ratio;
-        const posYWithRatio = (position.y ?? 0) * PIXEL_TO_METER_RATIO * ratio;
-
         return {
-            x: startingPointX - posXWithRatio,
-            y: startingPointY - posYWithRatio,
+            x: startingPointX,
+            y: startingPointY,
         };
     };
 
     const drawRobot = (img: HTMLImageElement) => (ctx: CanvasRenderingContext2D) => {
-        const { x, y } = getPositionFromBottomRight(img, ctx, { x: pose.current?.x ?? 0, y: pose.current?.y ?? 0 });
+        const startingPoint = getPositionFromBottomRight(img, ctx);
+
+        const trueX = pose.current.x * PIXEL_TO_METER_RATIO * ratio.current;
+        const trueY = pose.current.y * PIXEL_TO_METER_RATIO * ratio.current;
+
+        const gotoPosition = {
+            x: startingPoint.x - trueX,
+            y: startingPoint.y - trueY,
+        };
 
         ctx.fillStyle = '#000000';
         ctx.beginPath();
 
-        const random = Math.random() * 100;
+        // const random = Math.random() * 100;
         // ctx.arc(x, y, 20 * Math.sin(random * 0.05) ** 2, 0, 2 * Math.PI);
-        ctx.arc(x, y, 10, 0, 2 * Math.PI);
+        ctx.arc(gotoPosition.x, gotoPosition.y, 10, 0, 2 * Math.PI);
         ctx.fill();
     };
 
@@ -95,8 +101,9 @@ const Canvas = () => {
     // on mounted
     useEffect(() => {
         loadImage((img) => {
-            setIsReady(true);
+            console.log('image loaded');
             image.current = img;
+            setIsReady(true);
 
             drawLayers.current = [];
             drawLayers.current.push(drawMap(img));
@@ -112,10 +119,7 @@ const Canvas = () => {
 
         const rect = canvas.getBoundingClientRect();
 
-        const startingPoint = getPositionFromBottomRight(image.current, canvas.getContext('2d')!, {
-            x: 0,
-            y: 0,
-        });
+        const startingPoint = getPositionFromBottomRight(image.current, canvas.getContext('2d')!);
 
         const trueX = (position.x - rect.x) * CANVAS_SCALE;
         const trueY = (position.y - rect.y) * CANVAS_SCALE;
@@ -125,6 +129,11 @@ const Canvas = () => {
             y: (startingPoint.y - trueY) / ratio.current / PIXEL_TO_METER_RATIO,
         };
         console.log(gotoPosition);
+
+        poseStream?.send({
+            ...gotoPosition,
+            angle: pose.current?.angle ?? 0,
+        });
     };
 
     return isReady ? (
@@ -133,7 +142,7 @@ const Canvas = () => {
         </>
     ) : (
         <>
-            <div> assets not ready yet </div>
+            <div> Loading ... </div>
         </>
     );
 };
