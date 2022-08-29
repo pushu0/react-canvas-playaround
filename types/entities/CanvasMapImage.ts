@@ -1,4 +1,4 @@
-import { getRatio, getImageCenterPositionOnCanvas, getScaledImageDimensions } from "../../lib/canvas.utils";
+import { getRatio, getImageCenterPositionOnCanvas, getScaledImageDimensions } from "../../lib/utils";
 import { CanvasImage } from "./CanvasImage";
 
 export class CanvasMapImage extends CanvasImage {

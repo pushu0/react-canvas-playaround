@@ -1,6 +1,6 @@
 import { MutableRefObject } from "react";
 import { CanvasImage, CanvasItem } from ".";
-import { PIXEL_TO_METER_RATIO } from "../../lib/canvas.utils";
+import { PIXEL_TO_METER_RATIO } from "../../lib/utils";
 import { PosePayload } from "../../lib/stream";
 
 export class CanvasRobot extends CanvasItem {

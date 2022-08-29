@@ -5,7 +5,7 @@ import { getPoseStream, PosePayload, useStream } from '../lib/stream';
 import dynamic from 'next/dynamic';
 import {
     handleImgClick,
-} from '../lib/canvas.utils';
+} from '../lib/utils';
 import { IPosition, Collection } from '../types';
 import { CanvasMapImage, CanvasRobot } from '../types/entities';
 

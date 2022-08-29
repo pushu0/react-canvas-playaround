@@ -2,7 +2,7 @@ import styles from './BaseCanvas.module.css';
 
 import { useEffect, useRef } from 'react';
 import { IPosition } from '../types';
-import { CANVAS_SCALE } from '../lib/canvas.utils';
+import { CANVAS_SCALE } from '../lib/utils';
 
 const BaseCanvas = (props: {
     draw: (ctx: CanvasRenderingContext2D) => void;
