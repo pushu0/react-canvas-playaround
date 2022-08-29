@@ -3,11 +3,11 @@
 }
 
 .connected {
-  color: green;
+  background-color: green;
 }
 
 .disconnected {
-  color: red;
+  background-color: red;
 }
 
 .pose {
@@ -18,3 +18,43 @@
   font-weight: bold;
   display: block;
 }
+
+.chip {
+  display: flex;
+  background-color: white;
+  border-radius: 28px;
+  min-height: 28px;
+  font-size: 0.85em;
+  line-height: 28px;
+  padding-left: 10px;
+  padding-right: 10px;
+  align-items: center;
+  margin: 0 5px;
+  box-shadow: 0px 0px 4px 5px rgba(0,0,0,0.3);
+  justify-content: space-between;
+}
+
+.coordinates {
+  min-width: 300px;
+}
+.coordinates button {
+  margin-right: 5px;
+ }
+
+.toolbar {
+  position: fixed;
+  top: 3vh;
+  left: 0;
+  padding-left: 20px;
+  display: flex;
+}
+
+.dot {
+  height: 10px;
+  width: 10px;  
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+

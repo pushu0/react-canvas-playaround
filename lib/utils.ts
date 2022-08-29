@@ -1,7 +1,10 @@
 import { IDimensions, IPosition } from '../types';
 import { CanvasImage } from '../types/entities/CanvasImage';
 
+// Scale of the canvas / x2 forces higher resolution
 export const CANVAS_SCALE = 2;
+
+// Amount of pixels that equate a meter
 export const PIXEL_TO_METER_RATIO = 10;
 
 // calculate ratio
@@ -12,7 +15,7 @@ export const getRatio = (img1: { width: number; height: number }, img2: { width:
     return ratio;
 };
 
-// calculate position / dimensions of image to be drawn on canvas
+// calculate position of image to be drawn on canvas
 export const getImageCenterPositionOnCanvas = (
     img: { width: number; height: number },
     canvas: { width: number; height: number },
@@ -27,6 +30,7 @@ export const getImageCenterPositionOnCanvas = (
     };
 };
 
+// calculate  dimensions of image to be drawn on canvas
 export const getScaledImageDimensions = (img: { width: number; height: number }, ratio: number): IDimensions => {
     const imageHeight = img.height * ratio;
     const imageWidth = img.width * ratio;
@@ -37,7 +41,8 @@ export const getScaledImageDimensions = (img: { width: number; height: number },
     };
 };
 
-export const handleImgClick = (img: CanvasImage, canvas: HTMLCanvasElement, position: IPosition): IPosition | null => {  
+// Calculate position of the mouse click in relation to the image placed on canvas
+export const handleImgClick = (img: CanvasImage, canvas: HTMLCanvasElement, position: IPosition): IPosition | null => {
     const rect = canvas.getBoundingClientRect();
 
     const ratio = img.getRatioOnCanvas(canvas);
@@ -53,7 +58,17 @@ export const handleImgClick = (img: CanvasImage, canvas: HTMLCanvasElement, posi
     };
 
     const isWithinImageBounds =
-        trueX > imgPosition.x && trueX < boundries.right && trueY > imgPosition.y && trueY < boundries.bottom;    
+        trueX > imgPosition.x && trueX < boundries.right && trueY > imgPosition.y && trueY < boundries.bottom;
 
     return isWithinImageBounds ? gotoPosition : null;
+};
+
+// Get position of event
+export const getCursorPosition = (event: MouseEvent) => {
+    const x = event.clientX;
+    const y = event.clientY;
+    return {
+        x,
+        y,
+    };
 };

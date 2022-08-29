@@ -1,6 +1,8 @@
-import { IAsset, Collection } from "../types";
+import { IAsset, Collection } from '../types';
 
+// Library to store loaded assets
 export const library: Collection<HTMLImageElement> = {};
+
 export const loadAssets = async (assets: IAsset[]): Promise<Collection<HTMLImageElement>> => {
     try {
         const assetPromises = assets.map((asset) => {

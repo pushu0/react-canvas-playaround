@@ -1,60 +1,42 @@
 import styles from './RobotStatus.module.css';
 
-import { useCallback, useState } from 'react';
-
+import { useMemo, useCallback, useState, useRef } from 'react';
 import { getPoseStream, useStream, PosePayload, getPausedStream } from '../lib/stream';
+import dynamic from 'next/dynamic';
+import { PIXEL_TO_METER_RATIO } from '../lib/utils';
+import { usePoseControls } from '../lib/poseControls';
+
+const PoseValue = dynamic(() => import('../components/PoseValue'), { ssr: false });
+const Controls = dynamic(() => import('../components/Controls'), { ssr: false });
 
 const RobotStatus = () => {
+    // Pause state
+    const [isPaused, setIsPaused] = useState(false);
+    useStream(getPausedStream, ({ paused }) => setIsPaused(paused));
 
-  // Pause state
-  const { connected: pausedConnected, stream: pausedStream } = useStream(getPausedStream);
+    const { connected: poseConnected } = useStream(getPoseStream);
 
-  // Current pose
-  const [pose, setPose] = useState<PosePayload>();
-  const { connected: poseConnected } =
-    useStream(getPoseStream, (payload) => setPose(payload));
+    // Connection status
+    const status = (
+        <div className={styles.chip}>
+            <div className={[styles.dot, poseConnected ? styles.connected : styles.disconnected].join(' ')}></div>
+            <div>{poseConnected ? 'Online' : 'Offline'}</div>
+        </div>
+    );
 
-  // Connection status
-  const status = poseConnected ? (
-    <div className={styles.connected}>
-      Connection online
-    </div>
-  ) : (
-    <div className={styles.disconnected}>
-      Connection offline
-    </div>
-  );
+    // Pose control actions
+    const { actions } = usePoseControls();
 
-  // Current pose
-  const poseValue = (poseConnected && pose) ? (
-    <div className={styles.pose}>
-      <strong>Current robot pose</strong>
-      <code>x={formatNumber(pose.x)}, y={formatNumber(pose.y)}, angle={formatNumber(pose.angle)}</code>
-    </div>
-  ) : (
-    null
-  );
-
-  // Pause and unpause buttons
-  const pause = useCallback(() => pausedStream?.send({ paused: true }), [pausedStream]);
-  const unpause = useCallback(() => pausedStream?.send({ paused: false }), [pausedStream]);
-  const pauseButton = pausedConnected ? (
-    <div className={styles.buttons}>
-      <button onClick={unpause}>Start moving</button>
-      <button onClick={pause}>Stop moving</button>
-    </div>
-  ) : null;
-
-  // Component content
-  return (
-    <div className={styles.container}>
-      {status}
-      {poseValue}
-      {pauseButton}
-    </div>
-  );
+    // Component content
+    return (
+        <>
+            <div className={styles.toolbar}>
+                {status}
+                <PoseValue />
+            </div>
+            <Controls actions={actions} isPaused={isPaused} />
+        </>
+    );
 };
-
-const formatNumber = (num: number) => +num.toFixed(2);
 
 export default RobotStatus;

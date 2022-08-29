@@ -18,33 +18,35 @@ const poseServer = new WebSocketServer({ noServer: true, path: '/api/pose' });
 const pausedServer = new WebSocketServer({ noServer: true, path: '/api/paused' });
 
 void app.prepare().then(() => {
-  const server = http.createServer(async (req, res) => {
-    await handle(req, res);
-  }).listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port}`);
-  });
+    const server = http
+        .createServer(async (req, res) => {
+            await handle(req, res);
+        })
+        .listen(port, () => {
+            console.log(`> Ready on http://${hostname}:${port}`);
+        });
 
-  server.on('upgrade', (req, socket, head) => {
-    if (!req.url) return;
+    server.on('upgrade', (req, socket, head) => {
+        if (!req.url) return;
 
-    const { pathname } = parse(req.url);
+        const { pathname } = parse(req.url);
 
-    switch (pathname) {
-    case poseServer.options.path:
-      return poseServer.handleUpgrade(req, socket, head, handlePoseConnection);
-    case pausedServer.options.path:
-      return pausedServer.handleUpgrade(req, socket, head, handlePausedConnection);
-    default:
-      return;
-    }
-  });
+        switch (pathname) {
+            case poseServer.options.path:
+                return poseServer.handleUpgrade(req, socket, head, handlePoseConnection);
+            case pausedServer.options.path:
+                return pausedServer.handleUpgrade(req, socket, head, handlePausedConnection);
+            default:
+                return;
+        }
+    });
 });
 
 // Prepare the data – the current pose of the robot as it moves around.
 const pose = {
-  x: 60,
-  y: 40,
-  angle: 1.5707,
+    x: 60,
+    y: 40,
+    angle: 1.5707,
 };
 
 const speed = 0.1;
@@ -57,45 +59,45 @@ let paused = false;
 // Start a loop that will update the position of the robot, if it is currently
 // moving.
 setInterval(() => {
-  if (paused) return;
+    if (paused) return;
 
-  const ts = new Date().getTime();
-  pose.x += distance * Math.sin(speed*ts*0.01);
+    const ts = new Date().getTime();
+    pose.x += distance * Math.sin(speed * ts * 0.01);
 }, period);
 
 const handlePoseConnection = (ws: WebSocket, req: http.IncomingMessage) => {
-  console.log(`> New incoming WebSocket pose connection from ${req.socket.remoteAddress}`);
+    console.log(`> New incoming WebSocket pose connection from ${req.socket.remoteAddress}`);
 
-  setInterval(() => {
-    ws.send(JSON.stringify(pose));
-  }, period);
+    setInterval(() => {
+        ws.send(JSON.stringify(pose));
+    }, period);
 
-  ws.on('message', (data: RawData) => {
-    console.debug(`<-- Incoming WebSocket pose message: ${data}`);
-    const newPose = JSON.parse(data.toString()) as Partial<{ x: number; y: number; angle: number }>;
-    if (newPose.x !== undefined) pose.x = newPose.x;
-    if (newPose.y !== undefined)  pose.y = newPose.y;
-    if (newPose.angle !== undefined) pose.angle = newPose.angle;
-  });
+    ws.on('message', (data: RawData) => {
+        console.debug(`<-- Incoming WebSocket pose message: ${data}`);
+        const newPose = JSON.parse(data.toString()) as Partial<{ x: number; y: number; angle: number }>;
+        if (newPose.x !== undefined) pose.x = newPose.x;
+        if (newPose.y !== undefined) pose.y = newPose.y;
+        if (newPose.angle !== undefined) pose.angle = newPose.angle;
+    });
 
-  ws.on('close', () => {
-    console.log(`> WebSocket pose connection closed by ${req.socket.remoteAddress}`);
-  });
+    ws.on('close', () => {
+        console.log(`> WebSocket pose connection closed by ${req.socket.remoteAddress}`);
+    });
 };
 
 const handlePausedConnection = (ws: WebSocket, req: http.IncomingMessage) => {
-  console.log(`> New incoming WebSocket paused connection from ${req.socket.remoteAddress}`);
+    console.log(`> New incoming WebSocket paused connection from ${req.socket.remoteAddress}`);
 
-  setInterval(() => {
-    ws.send(JSON.stringify({ paused }));
-  }, period);
+    setInterval(() => {
+        ws.send(JSON.stringify({ paused }));
+    }, period);
 
-  ws.on('message', (data: RawData) => {
-    console.debug(`<-- Incoming WebSocket paused message: ${data}`);
-    paused = (JSON.parse(data.toString()) as { paused: boolean }).paused;
-  });
+    ws.on('message', (data: RawData) => {
+        console.debug(`<-- Incoming WebSocket paused message: ${data}`);
+        paused = (JSON.parse(data.toString()) as { paused: boolean }).paused;
+    });
 
-  ws.on('close', () => {
-    console.log(`> WebSocket paused connection closed by ${req.socket.remoteAddress}`);
-  });
+    ws.on('close', () => {
+        console.log(`> WebSocket paused connection closed by ${req.socket.remoteAddress}`);
+    });
 };
