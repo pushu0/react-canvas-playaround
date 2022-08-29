@@ -8,6 +8,7 @@ import {
     getRatio,
     getImageCenterPositionOnCanvas,
     getImageDimensionsToFitOnCanvas,
+    getPositionFromBottomRight,
     CANVAS_SCALE,
 } from '../lib/canvas.utils';
 import { IPosition, IDimensions } from '../types';
@@ -37,19 +38,7 @@ const Canvas = () => {
     const { image, loadImage } = useImage('/images/map.png');
 
     // compute Robot position
-    const getPositionFromBottomRight = (img: HTMLImageElement, context: CanvasRenderingContext2D) => {
-        const ratio = getRatio(context.canvas, img);
-        const { x, y } = getImageCenterPositionOnCanvas(img, context.canvas, ratio);
-        const { width, height } = getImageDimensionsToFitOnCanvas(img, context.canvas, ratio);
 
-        const startingPointX = x + width;
-        const startingPointY = y + height;
-
-        return {
-            x: startingPointX,
-            y: startingPointY,
-        };
-    };
 
     const drawRobot = (img: HTMLImageElement) => (ctx: CanvasRenderingContext2D) => {
         const startingPoint = getPositionFromBottomRight(img, ctx);
@@ -116,10 +105,13 @@ const Canvas = () => {
             console.error('Image not loaded');
             return;
         }
+        const context = canvas.getContext('2d')!;
 
         const rect = canvas.getBoundingClientRect();
 
-        const startingPoint = getPositionFromBottomRight(image.current, canvas.getContext('2d')!);
+        const startingPoint = getPositionFromBottomRight(image.current, context);
+        const imgPosition = getImageCenterPositionOnCanvas(image.current, canvas, ratio.current);
+        // const imgDimensions = getImageDimensionsToFitOnCanvas(image.current, canvas, ratio.current);
 
         const trueX = (position.x - rect.x) * CANVAS_SCALE;
         const trueY = (position.y - rect.y) * CANVAS_SCALE;
@@ -128,7 +120,14 @@ const Canvas = () => {
             x: (startingPoint.x - trueX) / ratio.current / PIXEL_TO_METER_RATIO,
             y: (startingPoint.y - trueY) / ratio.current / PIXEL_TO_METER_RATIO,
         };
-        console.log(gotoPosition);
+
+        const isWithinImageBounds =
+            trueX > imgPosition.x && trueX < startingPoint.x && trueY > imgPosition.y && trueY < startingPoint.y;
+
+        if (!isWithinImageBounds) {
+            console.error('Click outside map, position will not change');
+            return;
+        }
 
         poseStream?.send({
             ...gotoPosition,
