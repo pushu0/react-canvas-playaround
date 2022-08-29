@@ -4,13 +4,14 @@ import { useEffect, useRef } from 'react';
 import { getPoseStream, IPosePayload, useStream } from '../lib/stream';
 import dynamic from 'next/dynamic';
 import { handleImgClick } from '../lib/utils';
-import { IPosition, Collection } from '../types';
+import { IPosition, Collection, IAsset, EAsset } from '../types';
 import { CanvasMapImage, CanvasRobot } from '../types/entities';
+import { loadAssets } from '../lib/asset.library';
 
 const BaseCanvas = dynamic(() => import('../components/BaseCanvas'), { ssr: false });
 
 // expect an image to be drawn as a map
-const Canvas = (props: { assets: { map: HTMLImageElement } }) => {
+const Canvas = (props: { assets: Record<EAsset, HTMLImageElement> }) => {
     // pose as ref to skip re-rendering the whole component when it's updated
     const pose = useRef<IPosePayload>({
         x: 0,

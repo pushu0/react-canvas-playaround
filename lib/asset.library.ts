@@ -1,9 +1,9 @@
-import { IAsset, Collection } from '../types';
+import { IAsset, Collection, EAsset } from '../types';
 
 // Library to store loaded assets
-export const library: Collection<HTMLImageElement> = {};
+const library: any = {};
 
-export const loadAssets = async (assets: IAsset[]): Promise<Collection<HTMLImageElement>> => {
+export const loadAssets = async <T extends IAsset>(assets: T[]): Promise<Record<IAsset['id'], HTMLImageElement>> => {
     try {
         const assetPromises = assets.map((asset) => {
             return new Promise(function (resolve, reject) {
@@ -21,6 +21,6 @@ export const loadAssets = async (assets: IAsset[]): Promise<Collection<HTMLImage
     } catch (e) {
         console.error('Error caching images', e);
     } finally {
-        return library;
+        return library as Record<IAsset['id'], HTMLImageElement>;
     }
 };
