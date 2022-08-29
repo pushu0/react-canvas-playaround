@@ -2,36 +2,39 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 
 import styles from '../styles/index.module.css';
+import { useEffect, useRef, useState } from 'react';
+import { Collection } from '../types';
+import { loadAssets } from '../lib/asset.library';
 
 const RobotStatus = dynamic(() => import('../components/RobotStatus'), { ssr: false });
 const Canvas = dynamic(() => import('../components/Canvas'), { ssr: false });
 
 const Home = () => {
+    const [isLoading, setIsLoading] = useState(true);
+    const library = useRef<Collection<HTMLImageElement>>({});
+
+    const assets = [
+        {
+            id: 'map',
+            url: '/images/map.png',
+        },
+    ];
+
+    useEffect(() => {        
+        loadAssets(assets).then((data) => {            
+            library.current = data;
+            setIsLoading(false);
+        });
+    }, []);
+
+    const canvas = isLoading ? <div> Loading ...</div> : <Canvas assets={library.current} />;
+
     return (
         <div className={styles.container}>
-            {/* <Head>
-                <title>Robot Map tool</title>
-                <meta name="description" content="A basic robot front-end" />
-                <link rel="icon" href="/favicon.ico" />
-            </Head> */}
-
-            {/* <header className={styles.header}>Robot front-end</header> */}
-
             <main className={styles.main}>
-                {/* <p className={styles.placeholder}>
-                    Get started by editing <code className={styles.code}>pages/index.tsx</code> to add your
-                    implementation.
-                </p> */}
-                <Canvas />
+                {canvas}
                 <RobotStatus />
             </main>
-
-            <footer className={styles.footer}>
-                Powered by{' '}
-                <a href="https://nextjs.org" target="_blank" rel="noreferrer">
-                    Next.js
-                </a>
-            </footer>
         </div>
     );
 };

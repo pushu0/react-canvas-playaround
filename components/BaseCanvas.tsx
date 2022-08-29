@@ -19,6 +19,14 @@ const BaseCanvas = (props: {
         requestRef.current = requestAnimationFrame(tick);
     };
 
+    const handleClick = (e: MouseEvent) => {
+        const canvas = canvasRef.current as HTMLCanvasElement;
+        
+        e.stopImmediatePropagation()
+        const { x, y } = getCursorPosition(e);
+        props.onClickCallback?.(canvas, { x, y });                
+    }
+
     useEffect(() => {
         const canvas = canvasRef.current as HTMLCanvasElement;
 
@@ -29,16 +37,15 @@ const BaseCanvas = (props: {
         if (!!props.onClickCallback && typeof props.onClickCallback === 'function') {
             // click event listener
             console.log('triggering callback');
-            canvas.addEventListener('mousedown', (e) => {
-                e.stopImmediatePropagation()
-                const { x, y } = getCursorPosition(e);
-                props.onClickCallback?.(canvas, { x, y });                
-            });
+            canvas.addEventListener('mousedown', handleClick);
         }
 
         requestRef.current = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(requestRef.current);
-    }, []);
+        return () => {
+            cancelAnimationFrame(requestRef.current);
+            canvas.removeEventListener('mousedown', handleClick)
+        }
+    }, []); 
 
     return (
         <>
