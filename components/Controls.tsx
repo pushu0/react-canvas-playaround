@@ -8,27 +8,9 @@ import {
     faCaretDown,
     faCaretLeft,
     faCaretRight,
-    IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
-import { Collection } from '../types';
+import { Collection, EControls, IControlButton, IControlButtonAction } from '../types';
 import { useMemo, useState } from 'react';
-
-type IControlButtonAction = () => void;
-
-const enum EControls {
-    UP = 'up',
-    DOWN = 'down',
-    LEFT = 'left',
-    RIGHT = 'right',
-    PAUSE = 'pause',
-    PLAY = 'play',
-}
-
-interface IControlButton {
-    id: EControls;
-    action: IControlButtonAction;
-    icon: IconDefinition;
-}
 
 const Controls = (props: { actions: { [key in EControls]: IControlButtonAction }; isPaused: boolean }) => {
     // Define available controls and hook up parent actions
@@ -81,7 +63,7 @@ const Controls = (props: { actions: { [key in EControls]: IControlButtonAction }
                 <div key={index} className={styles.row}>
                     {row.map((btn) => (
                         <div key={btn.id} className={styles.button}>
-                            <button onClick={btn.action}>
+                            <button data-testid={btn.id} onClick={btn.action}>
                                 <FontAwesomeIcon icon={btn.icon} />
                             </button>
                         </div>

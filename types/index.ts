@@ -1,3 +1,4 @@
+import {IconDefinition} from '@fortawesome/free-solid-svg-icons';
 export * from './canvas';
 
 export type Collection<Type> = {
@@ -10,4 +11,21 @@ export const enum EAsset {
 export interface IAsset {
     id: EAsset;
     url: string;
+}
+
+export type IControlButtonAction = () => void;
+
+export enum EControls {
+    UP = 'up',
+    DOWN = 'down',
+    LEFT = 'left',
+    RIGHT = 'right',
+    PAUSE = 'pause',
+    PLAY = 'play',
+}
+
+export interface IControlButton {
+    id: EControls;
+    action: IControlButtonAction;
+    icon: IconDefinition;
 }
