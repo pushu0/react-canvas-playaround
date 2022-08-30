@@ -1,4 +1,9 @@
 module.exports = {
+    globals: {
+        'ts-jest': {
+            tsConfig: 'tsconfig.test.json',
+        },
+    },
     // The root of your source code, typically /src
     // `<rootDir>` is a token Jest substitutes
     roots: ['<rootDir>'],
@@ -6,7 +11,7 @@ module.exports = {
     // Jest transformations -- this adds support for TypeScript
     // using ts-jest
     transform: {
-        '^.+\\.tsx?$': ["ts-jest", { configFile: "./babel.jest.config.js" }],
+        '^.+\\.(t|j)sx?$': ['ts-jest', { configFile: './babel.jest.config.js' }],
     },
 
     // Runs special logic, such as cleaning up components
@@ -21,6 +26,12 @@ module.exports = {
     // Matches parent folder `__tests__` and filename
     // should contain `test` or `spec`.
     testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
+
+    moduleNameMapper: {
+        '\\.(css|less)$': '<rootDir>/__mocks__/styleMock.js',
+        '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
+            '<rootDir>/__mocks__/fileMock.js',
+    },
 
     // Module file extensions for importing
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
