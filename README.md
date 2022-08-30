@@ -21,7 +21,8 @@ $ yarn start
 ```
 
 ### Tests
-- tests sit within the `__tests__` folder. Unfortunatelly I've ran into some issues installing the required packages to test elements that render on the dom, so in the interest of time was only able to test util functions. 
+- tests sit within the `__tests__` folder. Currently tested what I deemed crucial, the `utils` that the app relies on to calculate canvas positioning and the `Controls` component as the user interacts with it.
+
 
 ```bash
 # run tests
